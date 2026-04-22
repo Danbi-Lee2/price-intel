@@ -273,12 +273,7 @@ input[type="text"]::placeholder { color:var(--muted); }
 <script>
 const CLIENT_ID     = 'GZeeURHXNPoK0BSUfoq0';
 const CLIENT_SECRET = 'Vn_V2s1Meo';
-// 여러 프록시를 순서대로 시도
-const PROXIES = [
-  'https://api.allorigins.win/raw?url=',
-  'https://corsproxy.io/?',
-  'https://cors-anywhere.herokuapp.com/',
-];
+const WORKER_URL = 'https://lucky-sunset-f6d4.danbi-lee2.workers.dev';
 
 let historyData = JSON.parse(localStorage.getItem('price_intel_v3') || '[]');
 
@@ -305,25 +300,10 @@ function hideError() {
 }
 
 async function naverSearch(query, display = 5) {
-  const apiUrl = `https://openapi.naver.com/v1/search/shop.json?query=${encodeURIComponent(query)}&display=${display}&sort=sim`;
-  
-  for (const proxy of PROXIES) {
-    try {
-      const url = proxy + encodeURIComponent(apiUrl);
-      const res = await fetch(url, {
-        headers: {
-          'X-Naver-Client-Id': CLIENT_ID,
-          'X-Naver-Client-Secret': CLIENT_SECRET,
-        }
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data.items) return data;
-    } catch(e) {
-      continue;
-    }
-  }
-  throw new Error('검색 서버 연결 실패. 잠시 후 다시 시도해주세요.');
+  const url = `${WORKER_URL}?query=${encodeURIComponent(query)}&display=${display}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('검색 실패 (' + res.status + ')');
+  return await res.json();
 }
 
 function cleanTitle(html) {
